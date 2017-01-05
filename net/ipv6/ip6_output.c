@@ -387,7 +387,7 @@ static bool ip6_pkt_too_big(const struct sk_buff *skb, unsigned int mtu)
 	if (skb->len <= mtu || skb->local_df)
 		return false;
 
-	if (skb_is_gso(skb) && skb_gso_network_seglen(skb) <= mtu)
+//	if (skb_is_gso(skb) && skb_gso_network_seglen(skb) <= mtu)
 		return false;
 
 	return true;
@@ -611,7 +611,7 @@ int ip6_find_1stfragopt(struct sk_buff *skb, u8 **nexthdr)
 void ipv6_select_ident(struct frag_hdr *fhdr, struct rt6_info *rt)
 {
 	static atomic_t ipv6_fragmentation_id;
-	int ident;
+	int old, new;
 
 	if (rt && !(rt->dst.flags & DST_NOPEER)) {
 		struct inet_peer *peer;
@@ -620,12 +620,17 @@ void ipv6_select_ident(struct frag_hdr *fhdr, struct rt6_info *rt)
 			rt6_bind_peer(rt, 1);
 		peer = rt->rt6i_peer;
 		if (peer) {
-			fhdr->identification = htonl(inet_getid(peer, 0));
+//			fhdr->identification = htonl(inet_getid(peer, 0));
 			return;
 		}
 	}
-	ident = atomic_inc_return(&ipv6_fragmentation_id);
-	fhdr->identification = htonl(ident);
+	do {
+		old = atomic_read(&ipv6_fragmentation_id);
+		new = old + 1;
+		if (!new)
+			new = 1;
+	} while (atomic_cmpxchg(&ipv6_fragmentation_id, old, new) != old);
+	fhdr->identification = htonl(new);
 }
 
 int ip6_fragment(struct sk_buff *skb, int (*output)(struct sk_buff *))
