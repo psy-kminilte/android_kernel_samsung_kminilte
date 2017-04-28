@@ -3462,6 +3462,8 @@ CONFIG_DEBUG_USER=y
 #
 # Samsung Rooting Restriction Feature
 #
+# Disable this as it interferes with TWRP adb.
+#
 #CONFIG_SEC_RESTRICT_ROOTING=y
 #CONFIG_SEC_RESTRICT_SETUID=y
 #CONFIG_SEC_RESTRICT_FORK=y
